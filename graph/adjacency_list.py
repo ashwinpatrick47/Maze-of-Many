@@ -54,35 +54,103 @@ class AdjacencyListGraph(Graph):
         for label in vertLabels:
             self.addVertex(label)
 
+    # def addEdge(self, vert1: Coordinate, vert2: Coordinate, weight: int = 1) -> bool:
+    #     """
+    #     Adds a traversable path between two rooms if:
+    #     1) No edge already exists,
+    #     2) Both rooms are in the graph,
+    #     3) The rooms are adjacent (orthogonally).
+
+    #     @param vert1: Source room.
+    #     @param vert2: Destination room.
+    #     @param weight: Movement cost. Default is 1.
+
+    #     @returns True if edge added successfully, otherwise False.
+    #     """
+    #     # IMPLEMENT ME
+    #     if vert1 not in self.adj_list or vert2 not in self.adj_list:
+    #         return False
+        
+    #     if not vert1.isAdjacent(vert2):
+    #         return False
+        
+    #     for v, w in self.adj_list[vert1]:
+    #         if v == vert2:
+    #             return False
+        
+    #     self.adj_list[vert1].append(vert2,weight)
+    #     self.adj_list[vert2].append(vert1,weight)
+
     def addEdge(self, vert1: Coordinate, vert2: Coordinate, weight: int = 1) -> bool:
-        """
-        Adds a traversable path between two rooms if:
-        1) No edge already exists,
-        2) Both rooms are in the graph,
-        3) The rooms are adjacent (orthogonally).
+        if vert1 not in self.adj_list or vert2 not in self.adj_list:
+            return False
+        if not vert1.isAdjacent(vert2):
+            return False
+        if weight <= 0:
+            return False  # store only real corridors
 
-        @param vert1: Source room.
-        @param vert2: Destination room.
-        @param weight: Movement cost. Default is 1.
+        # reject duplicates
+        for v, _ in self.adj_list[vert1]:
+            if v == vert2:
+                return False
 
-        @returns True if edge added successfully, otherwise False.
-        """
-        # IMPLEMENT ME
-        pass
+        # undirected: add both ways as a (neighbor, weight) tuple
+        self.adj_list[vert1].append((vert2, weight))
+        self.adj_list[vert2].append((vert1, weight))
+        return True
+
+
+    # def updateWall(self, vert1: Coordinate, vert2: Coordinate, hasWall: bool, weight: int = 1) -> bool:
+    #     """
+    #     Updates wall status between two rooms.
+
+    #     @param vert1: First room.
+    #     @param vert2: Second room.
+    #     @param hasWall: True to add wall (weight = 0), False to remove wall (weight = 1).
+    #     @param weight: if we are remove a wall, what is the edge weight?
+
+    #     @returns True if update successful.
+    #     """
+    #     # IMPLEMENT ME
+    #     if (
+    #             vert1 not in self.adj_list or
+    #             vert2 not in self.adj_list or
+    #             not vert1.isAdjacent(vert2)
+    #     ):
+    #         return False
+        
+    #     if hasWall:
+    #         self.adj_list[vert1] = [(v,w) for (v,w) in self.adj_list[vert1] if v != vert2]
+    #         self.adj_list[vert2] = [(v,w) for (v,w) in self.adj_list[vert2] if v != vert1]
+    #     else:
+    #         self.adj_list[vert1] = [(v,w) for (v,w) in self.adj_list[vert1] if v != vert2]
+    #         self.adj_list[vert2] = [(v,w) for (v,w) in self.adj_list[vert2] if v != vert1]
+
+    #         self.adj_list[vert1].append((vert2,weight))
+    #         self.adj_list[vert2].append((vert1,weight))
 
     def updateWall(self, vert1: Coordinate, vert2: Coordinate, hasWall: bool, weight: int = 1) -> bool:
-        """
-        Updates wall status between two rooms.
+        if (
+            vert1 not in self.adj_list or
+            vert2 not in self.adj_list or
+            not vert1.isAdjacent(vert2)
+        ):
+            return False
 
-        @param vert1: First room.
-        @param vert2: Second room.
-        @param hasWall: True to add wall (weight = 0), False to remove wall (weight = 1).
-        @param weight: if we are remove a wall, what is the edge weight?
+        if hasWall:
+            self.adj_list[vert1] = [(v, w) for (v, w) in self.adj_list[vert1] if v != vert2]
+            self.adj_list[vert2] = [(v, w) for (v, w) in self.adj_list[vert2] if v != vert1]
+            return True
+        else:
+            if weight <= 0:
+                return False
+            # overwrite any old entry to avoid duplicates
+            self.adj_list[vert1] = [(v, w) for (v, w) in self.adj_list[vert1] if v != vert2]
+            self.adj_list[vert2] = [(v, w) for (v, w) in self.adj_list[vert2] if v != vert1]
+            self.adj_list[vert1].append((vert2, weight))
+            self.adj_list[vert2].append((vert1, weight))
+            return True
 
-        @returns True if update successful.
-        """
-        # IMPLEMENT ME
-        pass
 
     def print(self):
         """
@@ -101,6 +169,8 @@ class AdjacencyListGraph(Graph):
             edge_strs = [f"({v.getRow()}, {v.getCol()}), {w}" for v, w in edges]
             print(f"({u.getRow()}, {u.getCol()}) -> [{'; '.join(edge_strs)}]")
 
+        
+
     def removeEdge(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
         Removes the path between two rooms.
@@ -111,7 +181,8 @@ class AdjacencyListGraph(Graph):
         @returns True if edge removed successfully.
         """
         # IMPLEMENT ME
-        pass
+        return self.updateWall(vert1, vert2, hasWall=True)
+        
 
     def hasVertex(self, label: Coordinate) -> bool:
         """
@@ -122,7 +193,7 @@ class AdjacencyListGraph(Graph):
         @returns True if room exists.
         """
         # IMPLEMENT ME
-        pass
+        return label in self.adj_list
 
     def hasEdge(self, vert1: Coordinate, vert2: Coordinate) -> bool:
         """
@@ -134,19 +205,38 @@ class AdjacencyListGraph(Graph):
         @returns True if edge exists and is traversable.
         """
         # IMPLEMENT ME
-        pass
+        if vert1 in self.adj_list and vert2 in self.adj_list:
+            for v,w in self.adj_list[vert1]:
+                if v == vert2 and w > 0:
+                    return True
+        return False
+
+    # def getWallStatus(self, vert1: Coordinate, vert2: Coordinate) -> bool:
+    #     """
+    #     Checks if a wall exists between two rooms.
+
+    #     @param vert1: First room.
+    #     @param vert2: Second room.
+
+    #     @returns True if wall exists (weight = 0), False otherwise.
+    #     """
+    #     # IMPLEMENT ME
+    #     if vert1 in self.adj_list and vert2 in self.adj_list:
+    #         for v,w in self.adj_list[vert1]:
+    #             if v == vert2:
+    #                 return w == 0
+    #             return True
+    #     return False
 
     def getWallStatus(self, vert1: Coordinate, vert2: Coordinate) -> bool:
-        """
-        Checks if a wall exists between two rooms.
+        if vert1 in self.adj_list and vert2 in self.adj_list:
+            for v, w in self.adj_list[vert1]:
+                if v == vert2:
+                    return w == 0  # corridor -> False, wall (explicit 0) -> True
+            return True  # vert2 not found at all => wall
+        return False
 
-        @param vert1: First room.
-        @param vert2: Second room.
 
-        @returns True if wall exists (weight = 0), False otherwise.
-        """
-        # IMPLEMENT ME
-        pass
 
     def getWeight(self, vert1: Coordinate, vert2: Coordinate) -> int:
         """
@@ -155,18 +245,30 @@ class AdjacencyListGraph(Graph):
         @returns positive integer if edge exists, 0 otherwise.
         """
         # IMPLEMENT ME
+        if vert1 in self.adj_list and vert2 in self.adj_list:
+            for v,w in self.adj_list[vert1]:
+                if v == vert2 and w > 0:
+                    return w
         return 0
 
     def getVertices(self) -> List[Coordinate]:
         return self.vertices
 
+    # def neighbours(self, label: Coordinate) -> List[Coordinate]:
+    #     """
+    #     Retrieves all accessible adjacent rooms.
+
+    #     @param label: Coordinate of the room.
+
+    #     @returns List of neighbouring Coordinates.
+    #     """
+    #     # IMPLEMENT ME
+    #     if label not in self.adj_list:
+    #         return []
+    #     return [v for v,w in self.adj_list[label] if w > 0]
+
     def neighbours(self, label: Coordinate) -> List[Coordinate]:
-        """
-        Retrieves all accessible adjacent rooms.
-
-        @param label: Coordinate of the room.
-
-        @returns List of neighbouring Coordinates.
-        """
-        # IMPLEMENT ME
-        return []
+        if label not in self.adj_list:
+            return []
+        edges = sorted(self.adj_list[label], key=lambda t: (t[0].getRow(), t[0].getCol()))
+        return [v for v, w in edges if w > 0]
