@@ -27,6 +27,39 @@ def kruskalMST(graph: Graph) -> Graph:
     mst.addVertices(graph.getVertices())
 
     # IMPLEMENT ME HERE
+    vertices = graph.getVertices()
+    if not vertices:
+        return type(graph)(graph.rows, graph.cols)
+    
+    mst = type(graph)(graph.rows, graph.cols)
+    mst.addVertices(vertices)
+
+    edges = []
+    seen = set()
+    for u in vertices:
+        for v in graph.neighbours(u):
+            key = tuple(sorted([(u.getRow(), u.getCol()), (v.getRow(), v.getCol())]))
+
+            if key in seen:
+                continue
+            seen.add(key)
+            w = graph.getWeight(u, v)
+            edges.append((w, u, v))
+
+    edges.sort(key=lambda x: x[0])
+
+    parent = {v: v for v in vertices}
+
+    
+    added = 0
+    target = len(vertices) - 1  
+    for w, u, v in edges:
+        if union(u, v, parent):        
+            if mst.addEdge(u, v, w):    
+                added += 1
+                if added == target:
+                    break
+
 
     return mst
 
