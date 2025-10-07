@@ -2,7 +2,7 @@
 # EDIT THIS FILE TO IMPLEMENT TASK D.
 # Functions for your solver.
 #
-# __author__ = 'YOUR NAME HERE'
+# __author__ = 'Ashwin Patrick'
 # __copyright__ = 'Copyright 2025, RMIT University'
 # -------------------------------------------------
 
@@ -39,14 +39,15 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
     if explorer_id == len(all_paths):
         all_paths.append([current])
     else:
-        all_paths[explorer_id].append(current)
+        if not all_paths[explorer_id] or all_paths[explorer_id][-1] != current:
+            all_paths[explorer_id].append(current)
 
     path = all_paths[explorer_id]
     visited.add(current)
 
     # put your exploration below!
     while True:
-        break  # remove this line when you are ready to go
+          # remove this line when you are ready to go
 
         """BE SURE TO LOOK AT THE OTHER SOLVERS FOR INSPIRATION
         
@@ -55,6 +56,82 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         # HINT: Use estimate_subtree_weight(...) to find the total weight in a sub-tree (branch).
         # HINT: Use dfsBacktrack(...) to return to junctions after exploring branches.
         # HINT: Use all_paths.append([...]) to spawn a new clone path."""
+        # Find all unvisited neighbours of the current cell.
+        unvisited = []
+        for nbr in graph.neighbours(current):
+            if nbr not in visited:
+                # Get the weight of the edge from current → neighbour.
+                w = graph.getWeight(current, nbr)
+                # Estimate how heavy the entire subtree under this neighbour will be.
+                est = estimate_subtree_weight(graph, nbr, visited.copy())
+                # Store (neighbour, edge weight, total estimated workload = edge + subtree).
+                unvisited.append((nbr, w, w + est))
+
+        # If there are no unvisited neighbours, this explorer has finished its branch.
+        if not unvisited:
+            break
+
+        # If there’s only one unvisited neighbour, keep moving forward without cloning.
+        if len(unvisited) == 1:
+            nbr, w, _ = unvisited[0]
+            path.append(nbr)         # Extend the current explorer’s path.
+            visited.add(nbr)         # Mark that cell as explored.
+            current = nbr            # Move the explorer into that neighbour.
+            continue
+
+        # Sort all unvisited branches by estimated workload (largest first).
+        unvisited.sort(key=lambda t: t[2], reverse=True)
+
+        # The heaviest branch becomes the “main” branch for this explorer.
+        main_nbr, main_w, main_B = unvisited[0]
+
+        # Use 60% of the main branch’s workload as a threshold to decide when cloning helps.
+        tau = 0.6 * main_B
+
+        # Split the remaining branches into two groups: serial and clone.
+        serial_branches = []
+        clone_branches = []
+        for nbr, w, B in unvisited[1:]:
+            # If backtracking this branch (≈ 2 * edge weight) costs too much, clone it.
+            if 2 * w >= tau:
+                clone_branches.append((nbr, w, B))
+            # Otherwise, handle it serially (same explorer + backtrack later).
+            else:
+                serial_branches.append((nbr, w, B))
+
+        # Create new explorers for clone branches.
+        for nbr, _, _ in clone_branches:
+            visited.add(nbr)                     # Reserve this node for the clone.
+            pre_idx = len(all_paths)             # Assign the clone its new ID.
+            # Each clone’s path begins at the junction, then steps into its branch.
+            all_paths.append([current, nbr])
+            # Recursively explore the clone’s branch.
+            task_d_explore(graph, nbr, visited, all_paths, explorer_id=pre_idx)
+
+        # For serial branches, explore one at a time, then backtrack to the junction.
+        junction = current
+        for nbr, _, _ in serial_branches:
+            # Step into the branch if not already in the path.
+            if path[-1] != nbr:
+                path.append(nbr)
+            visited.add(nbr)
+            # Explore this branch with the same explorer (no clone).
+            task_d_explore(graph, nbr, visited, all_paths, explorer_id=explorer_id)
+            # Find a backtracking route from the current node back to the junction.
+            backtrack_path = dfsBacktrack(graph, path[-1], junction)
+
+            # dfsBacktrack() returns a list of Coordinates — append them to our explorer’s path,
+            # but skip the first node since it's already the current location.
+            if backtrack_path and len(backtrack_path) > 1:
+                path.extend(backtrack_path[1:])
+            # Move the explorer’s position back to the junction.
+            current = junction
+
+        # Finally, continue down the main (heaviest) branch.
+        path.append(main_nbr)
+        visited.add(main_nbr)
+        current = main_nbr
+
 
     return len(all_paths) - 1  # number of current clones
 

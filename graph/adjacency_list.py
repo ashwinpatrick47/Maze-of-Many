@@ -2,7 +2,7 @@
 # EDIT THIS FILE TO IMPLEMENT ADJACENCY LIST.
 # Class for Adjacency List representation of Graph.
 #
-# __author__ = 'YOUR NAME HERE'
+# __author__ = 'Ashwin Patrick'
 # __copyright__ = 'Copyright 2025, RMIT University'
 # -------------------------------------------------
 
@@ -228,13 +228,22 @@ class AdjacencyListGraph(Graph):
     #             return True
     #     return False
 
+    # def getWallStatus(self, vert1: Coordinate, vert2: Coordinate) -> bool:
+    #     if vert1 in self.adj_list and vert2 in self.adj_list:
+    #         for v, w in self.adj_list[vert1]:
+    #             if v == vert2:
+    #                 return w == 0  # corridor -> False, wall (explicit 0) -> True
+    #         return True  # vert2 not found at all => wall
+    #     return False
+
     def getWallStatus(self, vert1: Coordinate, vert2: Coordinate) -> bool:
-        if vert1 in self.adj_list and vert2 in self.adj_list:
-            for v, w in self.adj_list[vert1]:
-                if v == vert2:
-                    return w == 0  # corridor -> False, wall (explicit 0) -> True
-            return True  # vert2 not found at all => wall
-        return False
+        # Wall if either vertex is absent or no traversable edge exists
+        if vert1 not in self.adj_list or vert2 not in self.adj_list:
+            return True
+        for v, w in self.adj_list[vert1]:
+            if v == vert2 and w > 0:
+                return False  # corridor exists
+        return True
 
 
 

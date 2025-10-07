@@ -2,7 +2,7 @@
 # EDIT THIS FILE TO IMPLEMENT KRUSKALS.
 # Function turns a graph into a minimum spanning tree using Kruskal's.
 #
-# __author__ = 'YOUR NAME HERE'
+# __author__ = 'Ashwin Patrick'
 # __copyright__ = 'Copyright 2025, RMIT University'
 # -------------------------------------------------
 
