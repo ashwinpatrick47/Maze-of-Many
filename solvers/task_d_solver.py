@@ -44,6 +44,7 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
 
     path = all_paths[explorer_id]
     visited.add(current)
+    sorcerer_can_spawn = (explorer_id == 0)
 
     # put your exploration below!
     while True:
@@ -74,7 +75,9 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         # If there’s only one unvisited neighbour, keep moving forward without cloning.
         if len(unvisited) == 1:
             nbr, w, _ = unvisited[0]
-            path.append(nbr)         # Extend the current explorer’s path.
+            if path[-1] != nbr:
+
+                path.append(nbr)         # Extend the current explorer’s path.
             visited.add(nbr)         # Mark that cell as explored.
             current = nbr            # Move the explorer into that neighbour.
             continue
@@ -85,19 +88,13 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         # The heaviest branch becomes the “main” branch for this explorer.
         main_nbr, main_w, main_B = unvisited[0]
 
-        # Use 60% of the main branch’s workload as a threshold to decide when cloning helps.
-        tau = 0.6 * main_B
-
-        # Split the remaining branches into two groups: serial and clone.
-        serial_branches = []
-        clone_branches = []
-        for nbr, w, B in unvisited[1:]:
-            # If backtracking this branch (≈ 2 * edge weight) costs too much, clone it.
-            if 2 * w >= tau:
-                clone_branches.append((nbr, w, B))
-            # Otherwise, handle it serially (same explorer + backtrack later).
-            else:
-                serial_branches.append((nbr, w, B))
+        if sorcerer_can_spawn:
+            tau = 0.6 * main_B
+            clone_branches  = [(nbr, w, B) for (nbr, w, B) in unvisited[1:] if 2 * w >= tau]
+            serial_branches = [(nbr, w, B) for (nbr, w, B) in unvisited[1:] if 2 * w <  tau]
+        else:
+            clone_branches  = []                 # clones cannot spawn further clones
+            serial_branches = unvisited[1:] 
 
         # Create new explorers for clone branches.
         for nbr, _, _ in clone_branches:
