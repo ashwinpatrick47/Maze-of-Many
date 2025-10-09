@@ -98,7 +98,7 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         tau_size = 0.6 * main_B
         tau_cost = clone_cost
 
-        # GLOBAL GATE: if cloning costs more than backtracking all side branches, disable cloning here
+        # if cloning costs more than backtracking all side branches, disable cloning here
         total_back = sum(2 * w for (_, w, _) in side)
         if clone_cost >= total_back:
             clone_branches  = []
