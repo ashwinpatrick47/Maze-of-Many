@@ -2,17 +2,17 @@
   "rows": 15,
   "cols": 15,
   "entrance": {
-    "row": 2,
-    "col": 2
+    "row": 0,
+    "col": 0
   },
   "graph_type": "matrix",
   "maze_generator": "dfs",
-  "maze_solver": "task_d",
-  "clone_cost": 1,
+  "maze_solver": "no_clone",
+  "clone_cost": 50,
   "mst_generator": "kruskals",
   "wall_removal_perc": 10,
   "max_weight": 10,
-  "visualise": true,
+  "visualise": false,
   "print_struct": false, 
   "load_maze": true,
   "save_maze": false,
