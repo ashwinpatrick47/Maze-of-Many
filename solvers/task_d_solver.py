@@ -6,13 +6,21 @@
 # __copyright__ = 'Copyright 2025, RMIT University'
 # -------------------------------------------------
 
+from functools import partial
 from graph.coordinate import Coordinate
 from graph.graph import Graph
 from solvers.util import estimate_subtree_weight, dfsBacktrack, generate_actions_from_paths
 
 
+def _append_if_new(path: list[Coordinate], node: Coordinate) -> None:
+    """Helper: append node if it isn’t a duplicate of the last one."""
+    if not path or path[-1] != node:
+        path.append(node)
+
+
 def task_d_explore(graph: Graph, current: Coordinate, visited: set,
-                   all_paths: list[list[Coordinate]], explorer_id: int = 0) -> int:
+                   all_paths: list[list[Coordinate]], explorer_id: int = 0,
+                   clone_cost: int = 1) -> int:
     """
     Returns a solution to the maze using YOUR exploration strategy. See always_clone and no_clone for inspiration.
 
@@ -39,17 +47,12 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
     if explorer_id == len(all_paths):
         all_paths.append([current])
     else:
-        if not all_paths[explorer_id] or all_paths[explorer_id][-1] != current:
-            all_paths[explorer_id].append(current)
+        _append_if_new(all_paths[explorer_id], current)
 
     path = all_paths[explorer_id]
     visited.add(current)
-    sorcerer_can_spawn = (explorer_id == 0)
 
-    # put your exploration below!
     while True:
-          # remove this line when you are ready to go
-
         """BE SURE TO LOOK AT THE OTHER SOLVERS FOR INSPIRATION
         
         # HINT: Use graph.neighbours(current) to find adjacent nodes.
@@ -57,107 +60,75 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         # HINT: Use estimate_subtree_weight(...) to find the total weight in a sub-tree (branch).
         # HINT: Use dfsBacktrack(...) to return to junctions after exploring branches.
         # HINT: Use all_paths.append([...]) to spawn a new clone path."""
-        # Find all unvisited neighbours of the current cell.
+        # Gather all unvisited neighbours with estimated subtree weight
         unvisited = []
         for nbr in graph.neighbours(current):
             if nbr not in visited:
-                # Get the weight of the edge from current → neighbour.
                 w = graph.getWeight(current, nbr)
-                # Estimate how heavy the entire subtree under this neighbour will be.
                 est = estimate_subtree_weight(graph, nbr, visited.copy())
-                # Store (neighbour, edge weight, total estimated workload = edge + subtree).
                 unvisited.append((nbr, w, w + est))
 
-        # If there are no unvisited neighbours, this explorer has finished its branch.
+        # End of branch
         if not unvisited:
             break
 
-        # If there’s only one unvisited neighbour, keep moving forward without cloning.
+        # Single path — keep going
         if len(unvisited) == 1:
             nbr, w, _ = unvisited[0]
-            if path[-1] != nbr:
-
-                path.append(nbr)         # Extend the current explorer’s path.
-            visited.add(nbr)         # Mark that cell as explored.
-            current = nbr            # Move the explorer into that neighbour.
+            _append_if_new(path, nbr)
+            visited.add(nbr)
+            current = nbr
             continue
 
-        # Sort all unvisited branches by estimated workload (largest first).
+        # Sort by descending estimated workload
         unvisited.sort(key=lambda t: t[2], reverse=True)
-
-        # The heaviest branch becomes the “main” branch for this explorer.
         main_nbr, main_w, main_B = unvisited[0]
 
-        if sorcerer_can_spawn:
-            tau = 0.6 * main_B
-            clone_branches  = [(nbr, w, B) for (nbr, w, B) in unvisited[1:] if 2 * w >= tau]
-            serial_branches = [(nbr, w, B) for (nbr, w, B) in unvisited[1:] if 2 * w <  tau]
-        else:
-            clone_branches  = []                 # clones cannot spawn further clones
-            serial_branches = unvisited[1:] 
+        # Cost-aware decision rule
+        side = unvisited[1:]
+        clone_branches  = [(nbr, w, B) for (nbr, w, B) in side if 2 * w > clone_cost]
+        serial_branches = [(nbr, w, B) for (nbr, w, B) in side if 2 * w <= clone_cost]
 
-        # Create new explorers for clone branches.
+        # Clone branches
         for nbr, _, _ in clone_branches:
-            visited.add(nbr)                     # Reserve this node for the clone.
-            pre_idx = len(all_paths)             # Assign the clone its new ID.
-            # Each clone’s path begins at the junction, then steps into its branch.
+            visited.add(nbr)
+            pre_idx = len(all_paths)
             all_paths.append([current, nbr])
-            # Recursively explore the clone’s branch.
-            task_d_explore(graph, nbr, visited, all_paths, explorer_id=pre_idx)
+            task_d_explore(graph, nbr, visited, all_paths, explorer_id=pre_idx, clone_cost=clone_cost)
 
-        # For serial branches, explore one at a time, then backtrack to the junction.
+        # Serial branches
         junction = current
         for nbr, _, _ in serial_branches:
-            # Step into the branch if not already in the path.
-            if path[-1] != nbr:
-                path.append(nbr)
+            _append_if_new(path, nbr)
             visited.add(nbr)
-            # Explore this branch with the same explorer (no clone).
-            task_d_explore(graph, nbr, visited, all_paths, explorer_id=explorer_id)
-            # Find a backtracking route from the current node back to the junction.
+            task_d_explore(graph, nbr, visited, all_paths, explorer_id=explorer_id, clone_cost=clone_cost)
             backtrack_path = dfsBacktrack(graph, path[-1], junction)
-
-            # dfsBacktrack() returns a list of Coordinates — append them to our explorer’s path,
-            # but skip the first node since it's already the current location.
             if backtrack_path and len(backtrack_path) > 1:
-                path.extend(backtrack_path[1:])
-            # Move the explorer’s position back to the junction.
+                for node in backtrack_path[1:]:
+                    _append_if_new(path, node)
             current = junction
 
-        # Finally, continue down the main (heaviest) branch.
-        path.append(main_nbr)
+        # Continue along main branch
+        _append_if_new(path, main_nbr)
         visited.add(main_nbr)
         current = main_nbr
 
-
-    return len(all_paths) - 1  # number of current clones
+    return len(all_paths) - 1
 
 
 def task_d_solver(graph: Graph, start: Coordinate, clone_cost: int) -> tuple[list[list[Coordinate]], int, int]:
     """
     Solves the maze using cost-aware clone-based DFS.
-
-    Spawns clones only when the cost of exploring and returning from a subtree exceeds the clone cost.
-    Tracks each explorer's path and actions, and returns the full traversal history.
-
-    @param graph: The maze graph to traverse.
-    @param start: The starting coordinate for the original explorer.
-    @param clone_cost: Fixed cost incurred each time a clone is spawned.
-
-    @return: A tuple containing:
-        - all_paths: A list of paths taken by each explorer (original + clones).
-        - max_total_cost: The highest cumulative cost incurred by any explorer (movement + clone costs).
-        - clone_count: The total number of clones spawned (equal to len(all_paths) - 1).
     """
     visited = set()
     all_paths = []
 
-    # the below function is your method for generating paths!
-    task_d_explore(graph, start, visited, all_paths=all_paths)
+    # Use partial to inject clone_cost into recursive calls without globals
+    explore_with_cost = partial(task_d_explore, clone_cost=clone_cost)
+    explore_with_cost(graph, start, visited, all_paths=all_paths)
 
-    # Post-process actions from paths
+    # Compute total costs
     all_actions = generate_actions_from_paths(graph, all_paths, clone_cost)
-
     max_total_cost = max(sum(actions) for actions in all_actions)
     clone_count = len(all_paths) - 1
 
