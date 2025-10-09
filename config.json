@@ -1,20 +1,20 @@
 {
-  "rows": 9,
-  "cols": 9,
+  "rows": 10,
+  "cols": 10,
   "entrance": {
-    "row": 0,
-    "col": 0
+    "row": 1,
+    "col": 1
   },
   "graph_type": "matrix",
   "maze_generator": "dfs",
-  "maze_solver": "always_clone",
-  "clone_cost": 1,
-  "mst_generator": "kruskals",
+  "maze_solver": "no_clone",
+  "clone_cost": 50,
+  "mst_generator": "prims",
   "wall_removal_perc": 10,
   "max_weight": 10,
-  "visualise": true,
+  "visualise": false,
   "print_struct": false, 
-  "load_maze": false,
+  "load_maze": true,
   "save_maze": false,
   "maze_name": "specMaze"
 }
