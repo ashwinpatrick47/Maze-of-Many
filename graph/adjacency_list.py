@@ -181,7 +181,7 @@ class AdjacencyListGraph(Graph):
         @returns True if edge removed successfully.
         """
         # IMPLEMENT ME
-        return self.updateWall(vert1, vert2, hasWall=True)
+        return self.updateWall(vert1, vert2, hasWall=True) #remove the edge or removes the "wall"
         
 
     def hasVertex(self, label: Coordinate) -> bool:
@@ -205,6 +205,7 @@ class AdjacencyListGraph(Graph):
         @returns True if edge exists and is traversable.
         """
         # IMPLEMENT ME
+        # Check if an edge exists between vert1 and vert2 with a positive weight.
         if vert1 in self.adj_list and vert2 in self.adj_list:
             for v,w in self.adj_list[vert1]:
                 if v == vert2 and w > 0:
@@ -242,8 +243,8 @@ class AdjacencyListGraph(Graph):
             return True
         for v, w in self.adj_list[vert1]:
             if v == vert2 and w > 0:
-                return False  # corridor exists
-        return True
+                return False  # No wall (corridor exists).
+        return True # Wall if no valid edge exists.
 
 
 
@@ -257,8 +258,8 @@ class AdjacencyListGraph(Graph):
         if vert1 in self.adj_list and vert2 in self.adj_list:
             for v,w in self.adj_list[vert1]:
                 if v == vert2 and w > 0:
-                    return w
-        return 0
+                    return w # Return the weight of the edge.
+        return 0 # No edge exists between the rooms.
 
     def getVertices(self) -> List[Coordinate]:
         return self.vertices
@@ -278,6 +279,7 @@ class AdjacencyListGraph(Graph):
 
     def neighbours(self, label: Coordinate) -> List[Coordinate]:
         if label not in self.adj_list:
-            return []
+            return [] # No neighbors if room is not in the graph.
         edges = sorted(self.adj_list[label], key=lambda t: (t[0].getRow(), t[0].getCol()))
+        # Sort neighbors by row and column for consistent order.
         return [v for v, w in edges if w > 0]

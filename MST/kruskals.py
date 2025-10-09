@@ -33,7 +33,7 @@ def kruskalMST(graph: Graph) -> Graph:
     
     mst = type(graph)(graph.rows, graph.cols)
     mst.addVertices(vertices)
-
+    # Collect all unique edges (avoid duplicates in undirected graph)
     edges = []
     seen = set()
     for u in vertices:
@@ -46,18 +46,19 @@ def kruskalMST(graph: Graph) -> Graph:
             w = graph.getWeight(u, v)
             edges.append((w, u, v))
 
+    # Sort all edges by ascending weight
     edges.sort(key=lambda x: x[0])
-
+    # Disjoint-set (union–find) structure for cycle detection
     parent = {v: v for v in vertices}
 
-    
+     # Build MST incrementally
     added = 0
-    target = len(vertices) - 1  
+    target = len(vertices) - 1   # MST has |V|-1 edges
     for w, u, v in edges:
-        if union(u, v, parent):        
-            if mst.addEdge(u, v, w):    
+        if union(u, v, parent):        # only connect if they are in different components
+            if mst.addEdge(u, v, w):     # add edge to MST
                 added += 1
-                if added == target:
+                if added == target: # stop once MST complete
                     break
 
 

@@ -120,8 +120,8 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
                     continue
 
                 # Clone if either:
-                #  (1) the subtree is heavy relative to the main branch, OR
-                #  (2) the round-trip for the entry edge is pricier than a clone.
+                #  the subtree is heavy relative to the main branch, OR
+                #  the round-trip for the entry edge is pricier than a clone.
                 if (B >= tau_size) or (2 * w >= tau_cost):
                     clone_branches.append((nbr, w, B))
                 else:
