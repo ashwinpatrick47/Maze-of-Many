@@ -94,11 +94,11 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         side = unvisited[1:]
 
         # Slightly lower threshold to clone sooner
-        tau_size = 0.45 * main_B       # from 0.6 → 0.45
-        tau_cost = 0.8 * clone_cost    # from 1.0 → 0.8 (clone a bit earlier)
+        tau_size = 0.45 * main_B       # from 0.6 to 0.45
+        tau_cost = 0.8 * clone_cost    # from 1.0 to 0.8
 
         total_back = sum(2 * w for (_, w, _) in side)
-        if clone_cost >= total_back * 1.2:  # require 20% advantage to disable cloning
+        if clone_cost >= total_back * 1.2:  # requiring 20% advantage to disable cloning
             clone_branches  = []
             serial_branches = side
         else:
@@ -115,7 +115,7 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
                     serial_branches.append((nbr, w, B))
                     continue
 
-                # Clone earlier: lower threshold for both subtree weight and edge cost
+                # Clone earlier, lower threshold for both subtree weight and edge cost
                 if (B >= tau_size) or (2 * w >= tau_cost):
                     clone_branches.append((nbr, w, B))
                 else:
