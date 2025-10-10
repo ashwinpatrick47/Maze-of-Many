@@ -55,11 +55,13 @@ def kruskalMST(graph: Graph) -> Graph:
     added = 0
     target = len(vertices) - 1   # MST has |V|-1 edges
     for w, u, v in edges:
-        if union(u, v, parent):        # only connect if they are in different components
-            if mst.addEdge(u, v, w):     # add edge to MST
+        if find(u, parent) != find(v, parent):   # check components
+            if mst.addEdge(u, v, w):             # only if edge succeeds
+                union(u, v, parent)              # now merge sets
                 added += 1
-                if added == target: # stop once MST complete
+                if added == target:
                     break
+
 
 
     return mst

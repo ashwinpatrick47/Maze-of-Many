@@ -90,27 +90,23 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
         # serial_branches = [(nbr, w, B) for (nbr, w, B) in side if 2 * w <= clone_cost]
 
         # Cost-aware decision rule (hybrid: cost + load + fan-out)
+        # Cost-aware decision rule (tuned hybrid)
         side = unvisited[1:]
 
-        # Thresholds:
-        # - tau_size: how “heavy” a side subtree must be relative to the main branch
-        # - tau_cost: how expensive the down-and-back is compared to a clone
-        tau_size = 0.6 * main_B
-        tau_cost = clone_cost
+        # Slightly lower threshold to clone sooner
+        tau_size = 0.45 * main_B       # from 0.6 → 0.45
+        tau_cost = 0.8 * clone_cost    # from 1.0 → 0.8 (clone a bit earlier)
 
-        # if cloning costs more than backtracking all side branches, disable cloning here
         total_back = sum(2 * w for (_, w, _) in side)
-        if clone_cost >= total_back:
+        if clone_cost >= total_back * 1.2:  # require 20% advantage to disable cloning
             clone_branches  = []
             serial_branches = side
         else:
-            # If fan-out is high, protect the lightest side (keep serial) and consider cloning the rest.
             fanout = len(side) >= 3
             protect = set()
             if fanout:
-                # Sort sides by estimated load descending; protect the lightest one
                 side_sorted = sorted(side, key=lambda t: t[2], reverse=True)
-                protect.add(side_sorted[-1][0])  # lightest by B
+                protect.add(side_sorted[-1][0])  # keep smallest for serial
 
             clone_branches = []
             serial_branches = []
@@ -119,13 +115,12 @@ def task_d_explore(graph: Graph, current: Coordinate, visited: set,
                     serial_branches.append((nbr, w, B))
                     continue
 
-                # Clone if either:
-                #  the subtree is heavy relative to the main branch, OR
-                #  the round-trip for the entry edge is pricier than a clone.
+                # Clone earlier: lower threshold for both subtree weight and edge cost
                 if (B >= tau_size) or (2 * w >= tau_cost):
                     clone_branches.append((nbr, w, B))
                 else:
                     serial_branches.append((nbr, w, B))
+
 
 
 
