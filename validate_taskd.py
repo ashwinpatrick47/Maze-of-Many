@@ -92,4 +92,4 @@ if __name__ == "__main__":
     for d in [1, 5, 10, 100, 1000]:
         validate_one(mst_graph, start, d)
 
-    print("\nTask D validation: ✅ All tests passed!")
+    print("\nTask D validation: All tests passed!")

@@ -1,13 +1,7 @@
-# -------------------------------------------------
-# Validation script for Task D
-# Save as: scratch_task_d_check.py  (repo root)
-# -------------------------------------------------
-
 from solvers.util import generate_actions_from_paths
 from solvers.no_clone import no_clone_solver
 from solvers.always_clone import always_clone_solver
-from solvers.task_d_solver import task_d_solver  # <-- your solver module
-
+from solvers.task_d_solver import task_d_solver  
 from graph.coordinate import Coordinate
 
 # Prefer matrix graph if available; fall back to base Graph.
@@ -19,7 +13,7 @@ except Exception:
     _HAS_SHAPE = False
 
 
-# ---------- helpers ----------
+
 def assert_paths_legal(graph, all_paths):
     for idx, p in enumerate(all_paths):
         assert p, f"Explorer {idx} has empty path"
@@ -81,7 +75,7 @@ def tiny_star_test():
         if clone_cost >= 100:
             assert max_cost <= max(no_cost, ac_cost), "Expected task_d not worse than baselines when clones are huge"
 
-    print("✅ OK: tiny_star_test passed")
+    print("tiny_star_test passed")
 
 
 def straight_line_test():
@@ -99,10 +93,10 @@ def straight_line_test():
     assert_paths_legal(g, all_paths)
     assert_full_coverage(g, all_paths)
     assert clones == 0, f"Line should have 0 clones, got {clones}"
-    print("✅ OK: straight_line_test passed", fmt_paths(all_paths), "cost=", max_cost)
+    print(" OK: straight_line_test passed", fmt_paths(all_paths), "cost=", max_cost)
 
 
 if __name__ == "__main__":
     tiny_star_test()
     straight_line_test()
-    print("\n🎉 All validations passed successfully!")
+    print("\n All validations passed successfully!")
